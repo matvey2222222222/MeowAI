@@ -1,6 +1,6 @@
 <!-- Иконки и виджеты -->
 <p align="center">
-  <img src="https://img.shields.io/badge/version-1.2.0--Multilingual-blue" alt="Version">
+  <img src="https://img.shields.io/badge/version-1.2.1--Multilingual-blue" alt="Version">
   <img src="https://img.shields.io/badge/status-Stable-brightgreen" alt="Status">
   <img src="https://img.shields.io/badge/license-MIT-green" alt="License">
   <a href="https://github.com/matvey2222222222/MeowAI/releases">
