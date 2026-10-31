@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MeowAI — Умный ИИ-помощник</title>
+  <meta name="description" content="MeowAI — десктопный ИИ-помощник. Ищет в интернете, фильтрует рекламу, решает примеры. Работает без установки Python.">
+  
+  <!-- Подключение шрифтов -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    /* ===== СБРОС СТИЛЕЙ И БАЗА ===== */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0a0a0f; color: #e8e8ed; line-height: 1.6;
+      overflow-x: hidden; position: relative;
+    }
+
+    /* ===== ЭФФЕКТЫ ФОНА ===== */
+    .bg-glow {
+      position: fixed; top: -30%; left: 50%; transform: translateX(-50%);
+      width: 800px; height: 800px;
+      background: radial-gradient(circle, rgba(120, 80, 255, 0.15) 0%, transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
+    .bg-grid {
+      position: fixed; inset: 0;
+      background-image: 
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+      background-size: 50px 50px; pointer-events: none; z-index: 0;
+      mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%);
+      -webkit-mask-image: radial-gradient(ellipse at center, black 20%, transparent 70%);
+    }
+
+    /* ===== НАВИГАЦИЯ ===== */
+    .navbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      background: rgba(10, 10, 15, 0.6); backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .nav-container {
+      max-width: 1200px; margin: 0 auto; padding: 1rem 2rem;
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .nav-logo { font-size: 1.4rem; font-weight: 800; color: #fff; text-decoration: none; }
+    .nav-links { display: flex; gap: 2.5rem; }
+    .nav-links a {
+      color: #a0a0b0; text-decoration: none; font-size: 0.95rem;
+      font-weight: 500; transition: color 0.3s ease;
+    }
+    .nav-links a:hover { color: #fff; }
+
+    /* ===== ГЛАВНЫЙ ЭКРАН ===== */
+    .hero {
+      position: relative; z-index: 1; max-width: 1200px; margin: 0 auto;
+      padding: 10rem 2rem 6rem; display: grid; grid-template-columns: 1fr 1fr;
+      gap: 4rem; align-items: center;
+    }
+    .hero-badge {
+      display: inline-block; padding: 0.5rem 1.2rem;
+      background: rgba(120, 80, 255, 0.15); border: 1px solid rgba(120, 80, 255, 0.3);
+      border-radius: 100px; font-size: 0.85rem; font-weight: 700;
+      color: #b8a0ff; letter-spacing: 1px; margin-bottom: 1.5rem;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(120, 80, 255, 0.4); }
+      70% { box-shadow: 0 0 0 10px rgba(120, 80, 255, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(120, 80, 255, 0); }
+    }
+    .hero-title { font-size: 4rem; font-weight: 800; line-height: 1.1; margin-bottom: 1.5rem; }
+    .gradient-text {
+      background: linear-gradient(135deg, #7850ff, #b8a0ff, #ff6bd6);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+    .hero-subtitle { font-size: 1.15rem; color: #a0a0b0; max-width: 500px; margin-bottom: 2.5rem; }
+    .hero-actions { display: flex; gap: 1rem; margin-bottom: 3rem; }
+
+    /* ===== КНОПКИ ===== */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 0.9rem 2rem; border-radius: 12px; font-weight: 600; font-size: 1rem;
+      text-decoration: none; transition: all 0.3s ease; cursor: pointer; border: none;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #7850ff, #b8a0ff); color: #fff;
+      box-shadow: 0 4px 20px rgba(120, 80, 255, 0.4);
+    }
+    .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 8px 30px rgba(120, 80, 255, 0.6); }
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05); color: #e8e8ed; border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .btn-secondary:hover { background: rgba(255, 255, 255, 0.1); transform: translateY(-3px); }
+    .btn-large { padding: 1.2rem 3rem; font-size: 1.15rem; width: 100%; max-width: 350px; }
+    
+    .hero-meta { display: flex; gap: 1.5rem; font-size: 0.9rem; color: #a0a0b0; font-weight: 500; }
+
+    /* ===== СКРИНШОТ ===== */
+    .hero-image img {
+      width: 100%; border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6); transition: transform 0.4s ease;
+    }
+    .hero-image img:hover { transform: scale(1.02); }
+    .img-fallback {
+      width: 100%; height: 350px; background: rgba(255, 255, 255, 0.02);
+      border: 2px dashed rgba(255, 255, 255, 0.1); border-radius: 16px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; color: #a0a0b0;
+    }
+    .img-fallback span { font-size: 4rem; margin-bottom: 1rem; }
+
+    /* ===== СЕКЦИИ ===== */
+    .features, .download { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 6rem 2rem; }
+    .section-title { font-size: 2.5rem; text-align: center; margin-bottom: 3.5rem; font-weight: 800; }
+
+    /* ===== СЕТКА ВОЗМОЖНОСТЕЙ ===== */
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
+    .feature-card {
+      background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06);
+      padding: 2.5rem 2rem; border-radius: 20px; transition: all 0.3s ease;
+    }
+    .feature-card:hover {
+      transform: translateY(-8px); background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(120, 80, 255, 0.3); box-shadow: 0 10px 30px rgba(120, 80, 255, 0.1);
+    }
+    .feature-icon { font-size: 2.5rem; margin-bottom: 1.2rem; }
+    .feature-card h3 { font-size: 1.25rem; margin-bottom: 0.8rem; color: #fff; }
+    .feature-card p { color: #a0a0b0; font-size: 0.95rem; }
+
+    /* ===== БЛОК СКАЧИВАНИЯ ===== */
+    .download-card {
+      background: linear-gradient(180deg, rgba(30, 30, 45, 0.8) 0%, rgba(15, 15, 25, 0.9) 100%);
+      border: 1px solid rgba(120, 80, 255, 0.3); border-radius: 24px;
+      padding: 4rem 2rem; text-align: center; box-shadow: 0 20px 80px rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(10px); display: flex; flex-direction: column; align-items: center;
+    }
+    .download-card h2 { font-size: 2.5rem; margin-bottom: 1rem; }
+    .download-desc { color: #a0a0b0; margin-bottom: 2rem; max-width: 600px; }
+    .download-info { font-weight: 700; color: #b8a0ff; margin-bottom: 1.5rem; font-size: 1.1rem; }
+    .download-note { font-size: 0.85rem; color: #666; margin-top: 1.5rem; max-width: 500px; }
+
+    /* ===== ФУТЕР ===== */
+    .footer {
+      border-top: 1px solid rgba(255, 255, 255, 0.08); padding: 3rem 2rem;
+      text-align: center; position: relative; z-index: 1; background: #0a0a0f;
+    }
+    .footer-content { max-width: 1200px; margin: 0 auto; color: #666; }
+    .footer-links { margin-top: 1rem; display: flex; justify-content: center; gap: 1.5rem; }
+    .footer-links a { color: #a0a0b0; text-decoration: none; transition: color 0.3s; }
+    .footer-links a:hover { color: #fff; }
+
+    /* ===== АДАПТИВ ===== */
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; padding-top: 8rem; text-align: center; }
+      .hero-actions, .hero-meta { justify-content: center; }
+      .hero-title { font-size: 3rem; }
+      .nav-links { display: none; }
+      .hero-subtitle { margin-inline: auto; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="bg-glow"></div>
+  <div class="bg-grid"></div>
+
+  <!-- Навигация -->
+  <nav class="navbar">
+    <div class="nav-container">
+      <a href="#" class="nav-logo">🐱 MeowAI</a>
+      <div class="nav-links">
+        <a href="#features">Возможности</a>
+        <a href="#download">Скачать</a>
+        <a href="https://github.com/matvey2222222222/MeowAI" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Главный экран -->
+  <header class="hero">
+    <div class="hero-content">
+      <div class="hero-badge" id="version-badge">Загрузка версии...</div>
+      <h1 class="hero-title">
+        Умный ИИ-помощник<br>
+        <span class="gradient-text">MeowAI</span>
+      </h1>
+      <p class="hero-subtitle">
+        Ищет информацию в интернете, фильтрует рекламу, решает примеры и запоминает ответы.
+        Работает на Windows без установки Python.
+      </p>
+      <div class="hero-actions">
+        <a href="#download" class="btn btn-primary" id="hero-download-btn">Скачать сейчас</a>
+        <a href="https://github.com/matvey2222222222/MeowAI/releases" target="_blank" rel="noopener" class="btn btn-secondary">Все релизы</a>
+      </div>
+      <div class="hero-meta">
+        <span>📦 <span id="download-count">...</span> скачиваний</span>
+        <span>⭐ <span id="star-count">...</span> звёзд</span>
+      </div>
+    </div>
+
+    <!-- Скриншот -->
+    <div class="hero-image">
+      <img src="screenshot.png" alt="Интерфейс MeowAI" id="app-screenshot" onerror="this.style.display='none'; document.getElementById('img-fallback').style.display='flex';">
+      <div id="img-fallback" class="img-fallback" style="display:none;">
+        <span>🐱</span>
+        <p>Скриншот скоро появится</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- Возможности -->
+  <section id="features" class="features">
+    <h2 class="section-title">Что умеет MeowAI</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🧠</div>
+        <h3>Глубокий анализ</h3>
+        <p>Выделяет суть из результатов поиска, а не просто копирует сниппеты.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🧹</div>
+        <h3>Фильтр рекламы</h3>
+        <p>Отсеивает объявления, ссылки и призывы, оставляя только полезное.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🧮</div>
+        <h3>Решение примеров</h3>
+        <p>Считает простые математические выражения без обращения к сети.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">💾</div>
+        <h3>Локальная база</h3>
+        <p>Запоминает ответы в JSON-файле, чтобы не искать одно и то же дважды.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔄</div>
+        <h3>Проверка обновлений</h3>
+        <p>Сам сообщает о выходе новой версии через GitHub.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🌐</div>
+        <h3>Два языка</h3>
+        <p>Понимает русский и английский — общайся как удобно.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Скачивание -->
+  <section id="download" class="download">
+    <div class="download-card">
+      <h2>Готовы попробовать?</h2>
+      <p class="download-desc">
+        Скачайте последнюю версию MeowAI для Windows. Python не требуется — всё уже внутри.
+      </p>
+      <div class="download-info">
+        <span id="release-version">Загрузка информации о релизе...</span>
+      </div>
+      <a href="#" class="btn btn-primary btn-large" id="main-download-btn" target="_blank" rel="noopener">
+        ⬇️ Скачать .exe
+      </a>
+      <!-- Убрали PyInstaller, оставили только предупреждение об антивирусе -->
+      <p class="download-note">
+        Примечание: антивирус может ложно срабатывать на файл программы.
+      </p>
+    </div>
+  </section>
+
+  <!-- Футер -->
+  <footer class="footer">
+    <div class="footer-content">
+      <p>© 2026 matvey2222222222. Все права защищены. Проприетарное программное обеспечение.</p>
+      <div class="footer-links">
+        <a href="https://github.com/matvey2222222222/MeowAI" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/matvey2222222222/MeowAI/issues" target="_blank" rel="noopener">Сообщить о баге</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Скрипт автоматической подгрузки данных -->
+  <script>
+    const REPO_OWNER = "matvey2222222222";
+    const REPO_NAME = "MeowAI";
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      try {
+        // 1. Получаем информацию о последнем релизе
+        const releaseRes = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases/latest`);
+        
+        if (releaseRes.ok) {
+          const releaseData = await releaseRes.json();
+          const versionTag = releaseData.tag_name;
+          
+          document.getElementById("version-badge").innerText = `${versionTag} · Стабильный релиз`;
+          document.getElementById("release-version").innerText = `Последняя версия: ${versionTag}`;
+          
+          // Ищем .exe файл в ассетах релиза
+          const exeAsset = releaseData.assets.find(asset => asset.name.endsWith('.exe'));
+          
+          if (exeAsset) {
+            const downloadUrl = exeAsset.browser_download_url;
+            document.getElementById("hero-download-btn").href = downloadUrl;
+            const mainBtn = document.getElementById("main-download-btn");
+            mainBtn.href = downloadUrl;
+            mainBtn.innerHTML = `⬇️ Скачать ${exeAsset.name}`;
+          } else {
+            document.getElementById("release-version").innerText = `Версия ${versionTag} (нет .exe файла)`;
+          }
+        } else {
+          document.getElementById("version-badge").innerText = "Релиз";
+          document.getElementById("release-version").innerText = "Релизы пока не опубликованы";
+        }
+
+        // 2. Получаем данные о репозитории (звезды)
+        const repoRes = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}`);
+        if (repoRes.ok) {
+          const repoData = await repoRes.json();
+          document.getElementById("star-count").innerText = repoData.stargazers_count;
+        }
+
+        // 3. Считаем общее количество скачиваний всех релизов
+        const allReleasesRes = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/releases`);
+        if (allReleasesRes.ok) {
+          const allReleases = await allReleasesRes.json();
+          let totalDownloads = 0;
+          allReleases.forEach(rel => {
+            rel.assets.forEach(asset => {
+              totalDownloads += asset.download_count;
+            });
+          });
+          document.getElementById("download-count").innerText = totalDownloads;
+        }
+      } catch (error) {
+        console.error("Ошибка загрузки данных GitHub API:", error);
+        document.getElementById("version-badge").innerText = "MeowAI";
+      }
+    });
+  </script>
+</body>
+</html>
